@@ -1,5 +1,8 @@
 package com.divashchenko;
 
+import net.lingala.zip4j.core.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -14,19 +17,31 @@ public class Main {
     private static int countJavaAnnotations = 0;
 
     public static void main(String[] args) {
-        try {
-            Files.copy(Paths.get("/usr/java/jdk1.8.0_202-amd64/src.zip"), Paths.get("/home/shergan/IdeaProjects/WorkWithFiles/src.zip"), StandardCopyOption.REPLACE_EXISTING);
+        String srcHome = "/usr/java/jdk1.8.0_202-amd64/src.zip";
+        String srcNewPlace = "/home/shergan/IdeaProjects/WorkWithFiles/src.zip";
+        String placeToExtractSrc = "/home/shergan/IdeaProjects/WorkWithFiles/srcJava";
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        String userDir = "/home/shergan/IdeaProjects/WorkWithFiles/srcJava";
-        File homeDir = new File(userDir);
+        File homeDir = new File(System.getProperty("user.dir"));
 
         if (homeDir.exists() && homeDir.isDirectory()) {
             File[] files = homeDir.listFiles();
             showFiles(files);
+        }
+        System.out.println();
+
+        try {
+            Files.copy(Paths.get(srcHome), Paths.get(srcNewPlace), StandardCopyOption.REPLACE_EXISTING);
+            ZipFile zipFile = new ZipFile(srcNewPlace);
+            zipFile.extractAll(placeToExtractSrc);
+        } catch (IOException | ZipException e) {
+            e.printStackTrace();
+        }
+
+        homeDir = new File(placeToExtractSrc);
+
+        if (homeDir.exists() && homeDir.isDirectory()) {
+            File[] files = homeDir.listFiles();
+            findJavaFiles(files);
         }
 
         System.out.println();
@@ -34,10 +49,10 @@ public class Main {
         System.out.println("@FunctionalInterface = " + countJavaAnnotations);
     }
 
-    private static void showFiles(File[] files) {
+    private static void findJavaFiles(File[] files) {
         for (File file : files) {
             if (file.isDirectory()) {
-                showFiles(file.listFiles());
+                findJavaFiles(file.listFiles());
             } else {
                 if (file.getName().contains(".java")) {
                     countJavaFile++;
@@ -54,6 +69,16 @@ public class Main {
                         e.printStackTrace();
                     }
                 }
+            }
+        }
+    }
+
+    private static void showFiles(File[] files) {
+        for (File file : files) {
+            if (file.isDirectory()) {
+                showFiles(file.listFiles());
+            } else {
+                System.out.println(file.getName());
             }
         }
     }
